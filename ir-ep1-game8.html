@@ -13,14 +13,13 @@
   .header h3 { font-size: 0.85em; color: #666; font-weight: normal; margin-top: 2px; }
   .progress { font-size: 0.85em; color: #555; margin-bottom: 12px; }
   .game-area { width: 100%; max-width: 480px; }
-  .columns { display: flex; gap: 12px; justify-content: center; }
+  .columns { display: flex; gap: 12px; }
   .column { flex: 1; display: flex; flex-direction: column; gap: 8px; }
-  .word-card { background: white; border: 2px solid #c0cfe0; border-radius: 10px; padding: 10px 8px; text-align: center; font-size: 0.9em; cursor: grab; user-select: none; transition: background 0.2s, border-color 0.2s; min-height: 48px; display: flex; align-items: center; justify-content: center; }
-  .word-card:active { cursor: grabbing; }
+  .word-card { background: white; border: 2px solid #c0cfe0; border-radius: 10px; padding: 10px 8px; text-align: center; font-size: 0.9em; cursor: grab; user-select: none; min-height: 48px; display: flex; align-items: center; justify-content: center; }
   .word-card.dragging { opacity: 0.5; border-color: #4a6fa5; }
   .word-card.correct { background: #d4edda; border-color: #28a745; color: #155724; cursor: default; }
   .word-card.incorrect { background: #f8d7da; border-color: #dc3545; }
-  .drop-zone { background: #eaf0fb; border: 2px dashed #a0b8d8; border-radius: 10px; padding: 10px 8px; text-align: center; font-size: 0.9em; min-height: 48px; display: flex; align-items: center; justify-content: center; color: #555; transition: background 0.2s, border-color 0.2s; }
+  .drop-zone { background: #eaf0fb; border: 2px dashed #a0b8d8; border-radius: 10px; padding: 10px 8px; text-align: center; font-size: 0.9em; min-height: 48px; display: flex; align-items: center; justify-content: center; color: #555; }
   .drop-zone.over { background: #d0e4ff; border-color: #4a6fa5; }
   .drop-zone.filled { background: white; border: 2px solid #c0cfe0; color: #333; }
   .drop-zone.correct { background: #d4edda; border-color: #28a745; color: #155724; }
@@ -40,25 +39,14 @@
 </style>
 </head>
 <body>
-
 <div class="header">
   <h1>International Relations</h1>
   <h2>Episode 1 | September 1 – September 30</h2>
   <h3>Game 8 of 15</h3>
 </div>
-
-<div id="closed-before" class="closed-msg" style="display:none">
-  <h2>Not Yet Open</h2>
-  <p>Episode 1 opens on September 1, 2026.</p>
-</div>
-
-<div id="closed-after" class="closed-msg" style="display:none">
-  <h2>This Episode Has Closed</h2>
-  <p>Episode 1 closed on September 30, 2026. Please check for the next episode.</p>
-</div>
-
+<div id="closed-before" class="closed-msg" style="display:none"><h2>Not Yet Open</h2><p>Episode 1 opens on September 1.</p></div>
+<div id="closed-after" class="closed-msg" style="display:none"><h2>This Episode Has Closed</h2><p>Episode 1 closed on September 30. Please check for the next episode.</p></div>
 <div id="main-content" style="display:none; flex-direction:column; align-items:center; width:100%;">
-
   <div class="overlay show" id="auth-overlay">
     <div class="modal email-form">
       <h2>Welcome!</h2>
@@ -68,278 +56,154 @@
       <button class="btn" onclick="checkEmail()">Start</button>
     </div>
   </div>
-
   <div class="overlay" id="penalty-overlay">
-    <div class="modal">
-      <h2>🔄 Not Quite!</h2>
-      <p>Going back one round. Try again!</p>
-      <button class="btn" onclick="dismissPenalty()">OK</button>
-    </div>
+    <div class="modal"><h2>🔄 Not Quite!</h2><p>Going back one round. Try again!</p><button class="btn" onclick="dismissPenalty()">OK</button></div>
   </div>
-
   <div class="overlay" id="round-complete-overlay">
-    <div class="modal">
-      <h2>✅ Round Complete!</h2>
-      <p id="round-complete-msg"></p>
-      <button class="btn" onclick="nextRound()">Continue</button>
-    </div>
+    <div class="modal"><h2>✅ Round Complete!</h2><p id="round-complete-msg"></p><button class="btn" onclick="nextRound()">Continue</button></div>
   </div>
-
   <div class="overlay" id="complete-overlay">
-    <div class="modal">
-      <h2>🎉 Episode 1 Complete!</h2>
-      <p>You have completed all games in Episode 1. Well done!</p>
-    </div>
+    <div class="modal"><h2>🎉 Episode 1 Complete!</h2><p>You have completed all games in Episode 1. Well done!</p></div>
   </div>
-
   <div class="progress" id="progress-text">Round 1 of 10</div>
-
   <div class="game-area">
     <div class="columns">
       <div class="column" id="eng-col"></div>
       <div class="column" id="kor-col"></div>
     </div>
   </div>
-
   <button class="btn" id="check-btn" onclick="checkAnswers()" disabled>Check Answers</button>
 </div>
-
+<iframe name="hidden-iframe" style="display:none"></iframe>
 <script>
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbzwHluspMZWtyTlhjcxcGIRlizvS6F49CEH1DD-WUtaHZnaUuXww88Kl5F06n-i076Zlw/exec";
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbxGBuKguJ0KjwDiyDnKPMcpUbnhzBn_cWSu7eWfZuCH99OBc4p8bmkLahb_uns3aOTYEg/exec";
 const EPISODE = 1;
 const GAME_NUMBER = 8;
 const OPEN_DATE = new Date("2026-08-23");
 const CLOSE_DATE = new Date("2026-09-30T23:59:59");
 const ROUNDS = [
-  [["realist perspective","현실주의 시각"],["assumption","가정"],["tenet","원리"],["allied","동맹 관계인"]],
-  [["summarize","정리"],["unitary","단일의"],["state","국가"],["proposition","명제"]],
-  [["downgrade","중요성을 낮추"],["state-centric assumption","국가 중심 가정"],["state-centric","국가 중심의"],["rational unitary actor","합리적인 단일 행위자"]],
-  [["interest group","이익 단체"],["subnational","비국가적"],["non-state actor","비국가 행위자"],["MNC","다국적 기업"]],
-  [["unitary rational-actor assumption","단일의 합리적 행위자 가정"],["group","단체"],["overestimate","과대평가"],["national interest","국익"]],
-  [["liberal","진보적인"],["regardless of","~에 상관없이"],["President","대통령"],["political party","정당"]],
-  [["same way","같은 방식"],["lack","부족"],["central government","중앙정부"],["conservative","보수적인"]],
-  [["international system","국제 체제"],["motive","동기"],["anarchy assumption","무정부 가정"],["central authority","중앙 권한"]],
-  [["look after","돌보"],["self-help system","자조 체계"],["authority","권위"],["own interest","자신의 이익"]],
-  [["preserve","지키"],["right","권리"],["separate","분리된"],["national sovereignty","국가 주권"]]
+  [["Mohism","묵자 사상"],["native","본토"],["Legalism","법률주의"],["last","지속"]],
+  [["Bronze Age","청동기 시대"],["zenith","정점"],["period","시기"],["Iron Age","철기 시대"]],
+  [["indirectly","간접적으로"],["loose","엄밀하지 않은"],["feudal","봉건적"],["feudal rule","봉건적 통치"]],
+  [["feudal rule","봉건 통치"],["fief lord","봉건 군주"],["decentralized","분권화된"],["baron","남작"]],
+  [["connection","연결"],["support","지지"],["weaken","약화되다"],["lead","이끌어내다"]],
+  [["divination","점의식"],["misbehave","옳지 못한 짓을 하다"],["open","개방적인"],["condition","달려 있다"]],
+  [["roadside","길가의"],["consult","상의하다"],["marketplace","시장"],["fortune teller","점쟁이"]],
+  [["ancestor","조상"],["universe","삼라만상"],["oracle","지성소"],["religious view","종교적 관점"]],
+  [["basis","기준"],["virtue","미덕"],["develop","고안하다"],["Mandate of Heaven","천명"]],
+  [["virtuous","도덕적인"],["ruling elite","통치하던 엘리트"],["consumption","소비"],["decentralized rule","분산된 통치"]]
 ];
-
-let currentRound = 0;
-let userEmail = "";
-let dragSrc = null;
-let filledDrops = {};
+let currentRound = 0, userEmail = "", dragSrc = null, filledDrops = {};
 
 function checkDates() {
   const now = new Date();
-  if (now < OPEN_DATE) {
-    document.getElementById('closed-before').style.display = 'block';
-    return false;
-  }
-  if (now > CLOSE_DATE) {
-    document.getElementById('closed-after').style.display = 'block';
-    return false;
-  }
-  document.getElementById('main-content').style.display = 'flex';
-  return true;
+  if (now < OPEN_DATE) { document.getElementById('closed-before').style.display='block'; return false; }
+  if (now > CLOSE_DATE) { document.getElementById('closed-after').style.display='block'; return false; }
+  document.getElementById('main-content').style.display='flex'; return true;
 }
 
 function checkEmail() {
   const input = document.getElementById('email-input').value.trim().toLowerCase();
   const cb = 'cb_' + Date.now();
   window[cb] = function(emails) {
-    const valid = emails.map(e => e.toLowerCase().trim());
-    if (valid.includes(input)) {
-      userEmail = input;
-      document.getElementById('auth-overlay').classList.remove('show');
-      loadRound(0);
-    } else {
-      document.getElementById('auth-error').style.display = 'block';
-    }
-    delete window[cb];
-    document.body.removeChild(script);
+    if (emails.map(e=>e.toLowerCase().trim()).includes(input)) {
+      userEmail=input; document.getElementById('auth-overlay').classList.remove('show'); loadRound(0);
+    } else { document.getElementById('auth-error').style.display='block'; }
+    delete window[cb]; document.body.removeChild(script);
   };
   const script = document.createElement('script');
-  script.src = SHEET_URL + '?callback=' + cb;
+  script.src = SHEET_URL+'?callback='+cb;
   document.body.appendChild(script);
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-  const input = document.getElementById('email-input');
-  if (input) input.addEventListener('keydown', function(e) { if (e.key === 'Enter') checkEmail(); });
+document.addEventListener('DOMContentLoaded', ()=>{
+  const inp=document.getElementById('email-input');
+  if(inp) inp.addEventListener('keydown', e=>{ if(e.key==='Enter') checkEmail(); });
 });
 
 function loadRound(idx) {
-  currentRound = idx;
-  filledDrops = {};
-  document.getElementById('progress-text').textContent = `Round ${idx+1} of 10`;
-  document.getElementById('check-btn').disabled = true;
-
-  const pairs = ROUNDS[idx];
-  const engWords = pairs.map(p => p[0]);
-  const shuffledKor = [...pairs.map(p => p[1])];
-  for (let i = shuffledKor.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffledKor[i], shuffledKor[j]] = [shuffledKor[j], shuffledKor[i]];
-  }
-
-  const engCol = document.getElementById('eng-col');
-  const korCol = document.getElementById('kor-col');
-  engCol.innerHTML = '';
-  korCol.innerHTML = '';
-
-  engWords.forEach((word) => {
-    const card = document.createElement('div');
-    card.className = 'word-card';
-    card.draggable = true;
-    card.textContent = word;
-    card.dataset.eng = word;
-    card.addEventListener('dragstart', onDragStart);
-    card.addEventListener('dragend', onDragEnd);
+  currentRound=idx; filledDrops={};
+  document.getElementById('progress-text').textContent=`Round ${idx+1} of 10`;
+  document.getElementById('check-btn').disabled=true;
+  const pairs=ROUNDS[idx];
+  const engWords=pairs.map(p=>p[0]);
+  const shuffledKor=[...pairs.map(p=>p[1])];
+  for(let i=shuffledKor.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [shuffledKor[i],shuffledKor[j]]=[shuffledKor[j],shuffledKor[i]]; }
+  const engCol=document.getElementById('eng-col'), korCol=document.getElementById('kor-col');
+  engCol.innerHTML=''; korCol.innerHTML='';
+  engWords.forEach(word=>{
+    const card=document.createElement('div');
+    card.className='word-card'; card.draggable=true; card.textContent=word; card.dataset.eng=word;
+    card.addEventListener('dragstart',onDragStart); card.addEventListener('dragend',onDragEnd);
     engCol.appendChild(card);
   });
-
-  shuffledKor.forEach((word) => {
-    const dz = document.createElement('div');
-    dz.className = 'drop-zone';
-    dz.dataset.kor = word;
-    dz.textContent = word;
-    dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
-    dz.addEventListener('dragleave', () => dz.classList.remove('over'));
-    dz.addEventListener('drop', onDrop);
+  shuffledKor.forEach(word=>{
+    const dz=document.createElement('div');
+    dz.className='drop-zone'; dz.dataset.kor=word; dz.textContent=word;
+    dz.addEventListener('dragover',e=>{ e.preventDefault(); dz.classList.add('over'); });
+    dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+    dz.addEventListener('drop',onDrop);
     korCol.appendChild(dz);
   });
 }
 
-function onDragStart(e) {
-  dragSrc = e.currentTarget;
-  dragSrc.classList.add('dragging');
-  e.dataTransfer.effectAllowed = 'move';
-  e.dataTransfer.setData('text/plain', dragSrc.dataset.eng);
-}
-
-function onDragEnd(e) {
-  e.currentTarget.classList.remove('dragging');
-}
+function onDragStart(e) { dragSrc=e.currentTarget; dragSrc.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain',dragSrc.dataset.eng); }
+function onDragEnd(e) { e.currentTarget.classList.remove('dragging'); }
 
 function onDrop(e) {
-  e.preventDefault();
-  const dz = e.currentTarget;
-  dz.classList.remove('over');
-  if (!dragSrc) return;
-
-  const engWord = dragSrc.dataset.eng;
-  const korWord = dz.dataset.kor;
-
-  if (filledDrops[korWord]) {
-    returnToBank(filledDrops[korWord]);
-  }
-
-  const prevKor = dragSrc.dataset.currentDz;
-  if (prevKor && prevKor !== korWord) {
+  e.preventDefault(); const dz=e.currentTarget; dz.classList.remove('over');
+  if(!dragSrc) return;
+  const engWord=dragSrc.dataset.eng, korWord=dz.dataset.kor;
+  if(filledDrops[korWord]) returnToBank(filledDrops[korWord]);
+  const prevKor=dragSrc.dataset.currentDz;
+  if(prevKor&&prevKor!==korWord){
     delete filledDrops[prevKor];
-    document.querySelectorAll('.drop-zone').forEach(z => {
-      if (z.dataset.kor === prevKor) {
-        z.classList.remove('filled');
-        z.textContent = prevKor;
-      }
-    });
+    document.querySelectorAll('.drop-zone').forEach(z=>{ if(z.dataset.kor===prevKor){ z.classList.remove('filled'); z.textContent=prevKor; } });
   }
-
-  filledDrops[korWord] = engWord;
-  dragSrc.dataset.currentDz = korWord;
-  dragSrc.style.display = 'none';
-  dz.classList.add('filled');
-  dz.textContent = korWord + ' ← ' + engWord;
-
-  checkAllFilled();
-  dragSrc = null;
+  filledDrops[korWord]=engWord; dragSrc.dataset.currentDz=korWord; dragSrc.style.display='none';
+  dz.classList.add('filled'); dz.textContent=korWord+' ← '+engWord;
+  checkAllFilled(); dragSrc=null;
 }
 
 function returnToBank(engWord) {
-  document.getElementById('eng-col').querySelectorAll('.word-card').forEach(card => {
-    if (card.dataset.eng === engWord) {
-      card.style.display = 'flex';
-      card.dataset.currentDz = '';
-    }
+  document.getElementById('eng-col').querySelectorAll('.word-card').forEach(card=>{
+    if(card.dataset.eng===engWord){ card.style.display='flex'; card.dataset.currentDz=''; }
   });
 }
 
 function checkAllFilled() {
-  const dzCount = document.querySelectorAll('.drop-zone').length;
-  const filled = Object.keys(filledDrops).length;
-  document.getElementById('check-btn').disabled = (filled < dzCount);
+  document.getElementById('check-btn').disabled=Object.keys(filledDrops).length<document.querySelectorAll('.drop-zone').length;
 }
 
 function checkAnswers() {
-  const pairs = ROUNDS[currentRound];
-  const correctMap = {};
-  pairs.forEach(p => correctMap[p[1]] = p[0]);
-
-  let allCorrect = true;
-  document.querySelectorAll('.drop-zone').forEach(dz => {
-    const kor = dz.dataset.kor;
-    const eng = filledDrops[kor];
-    if (eng === correctMap[kor]) {
-      dz.classList.add('correct');
-      document.querySelectorAll('.word-card').forEach(card => {
-        if (card.dataset.eng === eng) card.classList.add('correct');
-      });
-    } else {
-      dz.classList.add('incorrect');
-      allCorrect = false;
-    }
+  const pairs=ROUNDS[currentRound], correctMap={};
+  pairs.forEach(p=>correctMap[p[1]]=p[0]);
+  let allCorrect=true;
+  document.querySelectorAll('.drop-zone').forEach(dz=>{
+    const kor=dz.dataset.kor, eng=filledDrops[kor];
+    if(eng===correctMap[kor]){ dz.classList.add('correct'); document.querySelectorAll('.word-card').forEach(c=>{ if(c.dataset.eng===eng) c.classList.add('correct'); }); }
+    else { dz.classList.add('incorrect'); allCorrect=false; }
   });
-
-  if (allCorrect) {
-    if (currentRound + 1 >= ROUNDS.length) {
-      sendResult('Complete');
-      setTimeout(() => {
-        window.location.href = 'ir-ep1-game9.html';
-      }, 800);
-    } else {
-      setTimeout(() => {
-        const msg = document.getElementById('round-complete-msg');
-        msg.textContent = `Round ${currentRound+1} done! On to round ${currentRound+2}.`;
-        document.getElementById('round-complete-overlay').classList.add('show');
-      }, 600);
-    }
-  } else {
-    setTimeout(() => {
-      document.getElementById('penalty-overlay').classList.add('show');
-    }, 600);
-  }
+  if(allCorrect){
+    if(currentRound+1>=ROUNDS.length){ sendResult('Complete'); setTimeout(()=>{ window.location.href = 'ir-ep1-game9.html'; },800); }
+    else { setTimeout(()=>{ document.getElementById('round-complete-msg').textContent=`Round ${currentRound+1} done! On to round ${currentRound+2}.`; document.getElementById('round-complete-overlay').classList.add('show'); },600); }
+  } else { setTimeout(()=>document.getElementById('penalty-overlay').classList.add('show'),600); }
 }
 
-function nextRound() {
-  document.getElementById('round-complete-overlay').classList.remove('show');
-  loadRound(currentRound + 1);
-}
-
-function dismissPenalty() {
-  document.getElementById('penalty-overlay').classList.remove('show');
-  loadRound(Math.max(0, currentRound - 1));
-}
+function nextRound() { document.getElementById('round-complete-overlay').classList.remove('show'); loadRound(currentRound+1); }
+function dismissPenalty() { document.getElementById('penalty-overlay').classList.remove('show'); loadRound(Math.max(0,currentRound-1)); }
 
 function sendResult(status) {
-  const now = new Date();
-  fetch(SHEET_URL, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      email: userEmail,
-      episode: EPISODE,
-      gameNumber: GAME_NUMBER,
-      date: now.toLocaleDateString(),
-      time: now.toLocaleTimeString(),
-      roundsCompleted: ROUNDS.length,
-      totalRounds: ROUNDS.length,
-      status: status
-    })
-  }).catch(err => console.error('Submit error:', err));
+  const now=new Date();
+  const payload=JSON.stringify({email:userEmail,episode:EPISODE,gameNumber:GAME_NUMBER,date:now.toLocaleDateString(),time:now.toLocaleTimeString(),roundsCompleted:ROUNDS.length,totalRounds:ROUNDS.length,status:status});
+  const form=document.createElement('form');
+  form.method='POST'; form.action=SHEET_URL; form.target='hidden-iframe';
+  const inp=document.createElement('input');
+  inp.type='hidden'; inp.name='data'; inp.value=payload;
+  form.appendChild(inp); document.body.appendChild(form); form.submit(); document.body.removeChild(form);
 }
 
-window.onload = function() {
-  checkDates();
-};
+window.onload=function(){ checkDates(); };
 </script>
 </body>
 </html>

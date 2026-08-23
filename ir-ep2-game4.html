@@ -13,14 +13,13 @@
   .header h3 { font-size: 0.85em; color: #666; font-weight: normal; margin-top: 2px; }
   .progress { font-size: 0.85em; color: #555; margin-bottom: 12px; }
   .game-area { width: 100%; max-width: 480px; }
-  .columns { display: flex; gap: 12px; justify-content: center; }
+  .columns { display: flex; gap: 12px; }
   .column { flex: 1; display: flex; flex-direction: column; gap: 8px; }
-  .word-card { background: white; border: 2px solid #c0cfe0; border-radius: 10px; padding: 10px 8px; text-align: center; font-size: 0.9em; cursor: grab; user-select: none; transition: background 0.2s, border-color 0.2s; min-height: 48px; display: flex; align-items: center; justify-content: center; }
-  .word-card:active { cursor: grabbing; }
+  .word-card { background: white; border: 2px solid #c0cfe0; border-radius: 10px; padding: 10px 8px; text-align: center; font-size: 0.9em; cursor: grab; user-select: none; min-height: 48px; display: flex; align-items: center; justify-content: center; }
   .word-card.dragging { opacity: 0.5; border-color: #4a6fa5; }
   .word-card.correct { background: #d4edda; border-color: #28a745; color: #155724; cursor: default; }
   .word-card.incorrect { background: #f8d7da; border-color: #dc3545; }
-  .drop-zone { background: #eaf0fb; border: 2px dashed #a0b8d8; border-radius: 10px; padding: 10px 8px; text-align: center; font-size: 0.9em; min-height: 48px; display: flex; align-items: center; justify-content: center; color: #555; transition: background 0.2s, border-color 0.2s; }
+  .drop-zone { background: #eaf0fb; border: 2px dashed #a0b8d8; border-radius: 10px; padding: 10px 8px; text-align: center; font-size: 0.9em; min-height: 48px; display: flex; align-items: center; justify-content: center; color: #555; }
   .drop-zone.over { background: #d0e4ff; border-color: #4a6fa5; }
   .drop-zone.filled { background: white; border: 2px solid #c0cfe0; color: #333; }
   .drop-zone.correct { background: #d4edda; border-color: #28a745; color: #155724; }
@@ -40,25 +39,14 @@
 </style>
 </head>
 <body>
-
 <div class="header">
   <h1>International Relations</h1>
   <h2>Episode 2 | October 1 – October 24</h2>
   <h3>Game 4 of 15</h3>
 </div>
-
-<div id="closed-before" class="closed-msg" style="display:none">
-  <h2>Not Yet Open</h2>
-  <p>Episode 2 opens on October 1, 2026.</p>
-</div>
-
-<div id="closed-after" class="closed-msg" style="display:none">
-  <h2>This Episode Has Closed</h2>
-  <p>Episode 2 closed on October 24, 2026. Please check for the next episode.</p>
-</div>
-
+<div id="closed-before" class="closed-msg" style="display:none"><h2>Not Yet Open</h2><p>Episode 2 opens on October 1.</p></div>
+<div id="closed-after" class="closed-msg" style="display:none"><h2>This Episode Has Closed</h2><p>Episode 2 closed on October 24. Please check for the next episode.</p></div>
 <div id="main-content" style="display:none; flex-direction:column; align-items:center; width:100%;">
-
   <div class="overlay show" id="auth-overlay">
     <div class="modal email-form">
       <h2>Welcome!</h2>
@@ -68,278 +56,154 @@
       <button class="btn" onclick="checkEmail()">Start</button>
     </div>
   </div>
-
   <div class="overlay" id="penalty-overlay">
-    <div class="modal">
-      <h2>🔄 Not Quite!</h2>
-      <p>Going back one round. Try again!</p>
-      <button class="btn" onclick="dismissPenalty()">OK</button>
-    </div>
+    <div class="modal"><h2>🔄 Not Quite!</h2><p>Going back one round. Try again!</p><button class="btn" onclick="dismissPenalty()">OK</button></div>
   </div>
-
   <div class="overlay" id="round-complete-overlay">
-    <div class="modal">
-      <h2>✅ Round Complete!</h2>
-      <p id="round-complete-msg"></p>
-      <button class="btn" onclick="nextRound()">Continue</button>
-    </div>
+    <div class="modal"><h2>✅ Round Complete!</h2><p id="round-complete-msg"></p><button class="btn" onclick="nextRound()">Continue</button></div>
   </div>
-
   <div class="overlay" id="complete-overlay">
-    <div class="modal">
-      <h2>🎉 Episode 2 Complete!</h2>
-      <p>You have completed all games in Episode 2. Well done!</p>
-    </div>
+    <div class="modal"><h2>🎉 Episode 2 Complete!</h2><p>You have completed all games in Episode 2. Well done!</p></div>
   </div>
-
   <div class="progress" id="progress-text">Round 1 of 10</div>
-
   <div class="game-area">
     <div class="columns">
       <div class="column" id="eng-col"></div>
       <div class="column" id="kor-col"></div>
     </div>
   </div>
-
   <button class="btn" id="check-btn" onclick="checkAnswers()" disabled>Check Answers</button>
 </div>
-
+<iframe name="hidden-iframe" style="display:none"></iframe>
 <script>
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbzwHluspMZWtyTlhjcxcGIRlizvS6F49CEH1DD-WUtaHZnaUuXww88Kl5F06n-i076Zlw/exec";
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbxGBuKguJ0KjwDiyDnKPMcpUbnhzBn_cWSu7eWfZuCH99OBc4p8bmkLahb_uns3aOTYEg/exec";
 const EPISODE = 2;
 const GAME_NUMBER = 4;
 const OPEN_DATE = new Date("2026-10-01");
 const CLOSE_DATE = new Date("2026-10-24T23:59:59");
 const ROUNDS = [
-  [["achieve","달성"],["large group","큰 그룹"],["smaller groups","작은 그룹"],["watch","감시"]],
-  [["member’s contribution","일원의 기여"],["reach the goal","목표에 도달"],["individual contribution","개인적인 기여"],["connection","연관성"]],
-  [["receiving","받는 것"],["size","크기"],["amount","금액"],["depend on","따라 달라지다"]],
-  [["political action","정치적 행위"],["total contribution","총 기여"],["divide","분배"],["share","몫"]],
-  [["incentive to free ride","무임승차에 대한 동기"],["giving","기여하는 것"],["individual’s share of the gain","개인의 이익 몫"],["incentive not to give","기여하지 않으려는 동기"]],
-  [["become more powerful","더 강해지다"],["conclude","결론짓다"],["compare","비교"],["less of a problem","덜한 문제"]],
-  [["as a result","결과로"],["small groups of capitalists","소그룹의 자본가"],["worker wages","노동자의 임금"],["within","~내에서"]],
-  [["low wages","낮은 임금"],["difficulty","어려움"],["workers","노동자"],["high wages","높은 임금"]],
-  [["economic exchange","경제 교류"],["capitalist societies","자본주의 사회"],["unequal","불평등한"],["lead to","이끌어내다"]],
-  [["over savings","과잉저축"],["poorer","더 가난한"],["spend","소비하다"],["under consumption","저소비"]]
+  [["theorist","이론가"],["foreign scholar","외국 학자"],["administrator","행정관"],["respond","대응"]],
+  [["invite","초대"],["Duke","공작"],["reform proposal","개혁 계획안"],["general","장군"]],
+  [["establish","설립"],["Shang Yang","상앙"],["Legalist scholar","법가 학자"],["foundation","터"]],
+  [["strict law","엄격한 법률"],["legalist belief","법가 신념"],["treat equally","동등하게 대"],["regardless of","~와 관계없이"]],
+  [["social order","사회 질서"],["eliminate","제거"],["meritocracy","실력주의 제도"],["harsh punishment","가혹한 처벌"]],
+  [["performance","업무 능력"],["unimportant","중요하지 않은"],["high government office","고관청"],["promotion","승진"]],
+  [["hierarchical","계층적인"],["function","기능"],["government official","정부 관료"],["legalist reform","법가의 개혁"]],
+  [["decision","결정"],["procedure","절차"],["control","통제"],["incentive","동기유발"]],
+  [["civilian bureaucracy","민간 관료제도"],["chain of command","지휘 계통"],["military bureaucracy","군사 관료제도"],["report to","~에게 보고"]],
+  [["surplus in the economy","경제적 잉여"],["funnel resources","자원을 투입"],["military leadership","군사 지도력"],["direct control","직접 관리"]]
 ];
-
-let currentRound = 0;
-let userEmail = "";
-let dragSrc = null;
-let filledDrops = {};
+let currentRound = 0, userEmail = "", dragSrc = null, filledDrops = {};
 
 function checkDates() {
   const now = new Date();
-  if (now < OPEN_DATE) {
-    document.getElementById('closed-before').style.display = 'block';
-    return false;
-  }
-  if (now > CLOSE_DATE) {
-    document.getElementById('closed-after').style.display = 'block';
-    return false;
-  }
-  document.getElementById('main-content').style.display = 'flex';
-  return true;
+  if (now < OPEN_DATE) { document.getElementById('closed-before').style.display='block'; return false; }
+  if (now > CLOSE_DATE) { document.getElementById('closed-after').style.display='block'; return false; }
+  document.getElementById('main-content').style.display='flex'; return true;
 }
 
 function checkEmail() {
   const input = document.getElementById('email-input').value.trim().toLowerCase();
   const cb = 'cb_' + Date.now();
   window[cb] = function(emails) {
-    const valid = emails.map(e => e.toLowerCase().trim());
-    if (valid.includes(input)) {
-      userEmail = input;
-      document.getElementById('auth-overlay').classList.remove('show');
-      loadRound(0);
-    } else {
-      document.getElementById('auth-error').style.display = 'block';
-    }
-    delete window[cb];
-    document.body.removeChild(script);
+    if (emails.map(e=>e.toLowerCase().trim()).includes(input)) {
+      userEmail=input; document.getElementById('auth-overlay').classList.remove('show'); loadRound(0);
+    } else { document.getElementById('auth-error').style.display='block'; }
+    delete window[cb]; document.body.removeChild(script);
   };
   const script = document.createElement('script');
-  script.src = SHEET_URL + '?callback=' + cb;
+  script.src = SHEET_URL+'?callback='+cb;
   document.body.appendChild(script);
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-  const input = document.getElementById('email-input');
-  if (input) input.addEventListener('keydown', function(e) { if (e.key === 'Enter') checkEmail(); });
+document.addEventListener('DOMContentLoaded', ()=>{
+  const inp=document.getElementById('email-input');
+  if(inp) inp.addEventListener('keydown', e=>{ if(e.key==='Enter') checkEmail(); });
 });
 
 function loadRound(idx) {
-  currentRound = idx;
-  filledDrops = {};
-  document.getElementById('progress-text').textContent = `Round ${idx+1} of 10`;
-  document.getElementById('check-btn').disabled = true;
-
-  const pairs = ROUNDS[idx];
-  const engWords = pairs.map(p => p[0]);
-  const shuffledKor = [...pairs.map(p => p[1])];
-  for (let i = shuffledKor.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffledKor[i], shuffledKor[j]] = [shuffledKor[j], shuffledKor[i]];
-  }
-
-  const engCol = document.getElementById('eng-col');
-  const korCol = document.getElementById('kor-col');
-  engCol.innerHTML = '';
-  korCol.innerHTML = '';
-
-  engWords.forEach((word) => {
-    const card = document.createElement('div');
-    card.className = 'word-card';
-    card.draggable = true;
-    card.textContent = word;
-    card.dataset.eng = word;
-    card.addEventListener('dragstart', onDragStart);
-    card.addEventListener('dragend', onDragEnd);
+  currentRound=idx; filledDrops={};
+  document.getElementById('progress-text').textContent=`Round ${idx+1} of 10`;
+  document.getElementById('check-btn').disabled=true;
+  const pairs=ROUNDS[idx];
+  const engWords=pairs.map(p=>p[0]);
+  const shuffledKor=[...pairs.map(p=>p[1])];
+  for(let i=shuffledKor.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [shuffledKor[i],shuffledKor[j]]=[shuffledKor[j],shuffledKor[i]]; }
+  const engCol=document.getElementById('eng-col'), korCol=document.getElementById('kor-col');
+  engCol.innerHTML=''; korCol.innerHTML='';
+  engWords.forEach(word=>{
+    const card=document.createElement('div');
+    card.className='word-card'; card.draggable=true; card.textContent=word; card.dataset.eng=word;
+    card.addEventListener('dragstart',onDragStart); card.addEventListener('dragend',onDragEnd);
     engCol.appendChild(card);
   });
-
-  shuffledKor.forEach((word) => {
-    const dz = document.createElement('div');
-    dz.className = 'drop-zone';
-    dz.dataset.kor = word;
-    dz.textContent = word;
-    dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
-    dz.addEventListener('dragleave', () => dz.classList.remove('over'));
-    dz.addEventListener('drop', onDrop);
+  shuffledKor.forEach(word=>{
+    const dz=document.createElement('div');
+    dz.className='drop-zone'; dz.dataset.kor=word; dz.textContent=word;
+    dz.addEventListener('dragover',e=>{ e.preventDefault(); dz.classList.add('over'); });
+    dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+    dz.addEventListener('drop',onDrop);
     korCol.appendChild(dz);
   });
 }
 
-function onDragStart(e) {
-  dragSrc = e.currentTarget;
-  dragSrc.classList.add('dragging');
-  e.dataTransfer.effectAllowed = 'move';
-  e.dataTransfer.setData('text/plain', dragSrc.dataset.eng);
-}
-
-function onDragEnd(e) {
-  e.currentTarget.classList.remove('dragging');
-}
+function onDragStart(e) { dragSrc=e.currentTarget; dragSrc.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain',dragSrc.dataset.eng); }
+function onDragEnd(e) { e.currentTarget.classList.remove('dragging'); }
 
 function onDrop(e) {
-  e.preventDefault();
-  const dz = e.currentTarget;
-  dz.classList.remove('over');
-  if (!dragSrc) return;
-
-  const engWord = dragSrc.dataset.eng;
-  const korWord = dz.dataset.kor;
-
-  if (filledDrops[korWord]) {
-    returnToBank(filledDrops[korWord]);
-  }
-
-  const prevKor = dragSrc.dataset.currentDz;
-  if (prevKor && prevKor !== korWord) {
+  e.preventDefault(); const dz=e.currentTarget; dz.classList.remove('over');
+  if(!dragSrc) return;
+  const engWord=dragSrc.dataset.eng, korWord=dz.dataset.kor;
+  if(filledDrops[korWord]) returnToBank(filledDrops[korWord]);
+  const prevKor=dragSrc.dataset.currentDz;
+  if(prevKor&&prevKor!==korWord){
     delete filledDrops[prevKor];
-    document.querySelectorAll('.drop-zone').forEach(z => {
-      if (z.dataset.kor === prevKor) {
-        z.classList.remove('filled');
-        z.textContent = prevKor;
-      }
-    });
+    document.querySelectorAll('.drop-zone').forEach(z=>{ if(z.dataset.kor===prevKor){ z.classList.remove('filled'); z.textContent=prevKor; } });
   }
-
-  filledDrops[korWord] = engWord;
-  dragSrc.dataset.currentDz = korWord;
-  dragSrc.style.display = 'none';
-  dz.classList.add('filled');
-  dz.textContent = korWord + ' ← ' + engWord;
-
-  checkAllFilled();
-  dragSrc = null;
+  filledDrops[korWord]=engWord; dragSrc.dataset.currentDz=korWord; dragSrc.style.display='none';
+  dz.classList.add('filled'); dz.textContent=korWord+' ← '+engWord;
+  checkAllFilled(); dragSrc=null;
 }
 
 function returnToBank(engWord) {
-  document.getElementById('eng-col').querySelectorAll('.word-card').forEach(card => {
-    if (card.dataset.eng === engWord) {
-      card.style.display = 'flex';
-      card.dataset.currentDz = '';
-    }
+  document.getElementById('eng-col').querySelectorAll('.word-card').forEach(card=>{
+    if(card.dataset.eng===engWord){ card.style.display='flex'; card.dataset.currentDz=''; }
   });
 }
 
 function checkAllFilled() {
-  const dzCount = document.querySelectorAll('.drop-zone').length;
-  const filled = Object.keys(filledDrops).length;
-  document.getElementById('check-btn').disabled = (filled < dzCount);
+  document.getElementById('check-btn').disabled=Object.keys(filledDrops).length<document.querySelectorAll('.drop-zone').length;
 }
 
 function checkAnswers() {
-  const pairs = ROUNDS[currentRound];
-  const correctMap = {};
-  pairs.forEach(p => correctMap[p[1]] = p[0]);
-
-  let allCorrect = true;
-  document.querySelectorAll('.drop-zone').forEach(dz => {
-    const kor = dz.dataset.kor;
-    const eng = filledDrops[kor];
-    if (eng === correctMap[kor]) {
-      dz.classList.add('correct');
-      document.querySelectorAll('.word-card').forEach(card => {
-        if (card.dataset.eng === eng) card.classList.add('correct');
-      });
-    } else {
-      dz.classList.add('incorrect');
-      allCorrect = false;
-    }
+  const pairs=ROUNDS[currentRound], correctMap={};
+  pairs.forEach(p=>correctMap[p[1]]=p[0]);
+  let allCorrect=true;
+  document.querySelectorAll('.drop-zone').forEach(dz=>{
+    const kor=dz.dataset.kor, eng=filledDrops[kor];
+    if(eng===correctMap[kor]){ dz.classList.add('correct'); document.querySelectorAll('.word-card').forEach(c=>{ if(c.dataset.eng===eng) c.classList.add('correct'); }); }
+    else { dz.classList.add('incorrect'); allCorrect=false; }
   });
-
-  if (allCorrect) {
-    if (currentRound + 1 >= ROUNDS.length) {
-      sendResult('Complete');
-      setTimeout(() => {
-        window.location.href = 'ir-ep2-game5.html';
-      }, 800);
-    } else {
-      setTimeout(() => {
-        const msg = document.getElementById('round-complete-msg');
-        msg.textContent = `Round ${currentRound+1} done! On to round ${currentRound+2}.`;
-        document.getElementById('round-complete-overlay').classList.add('show');
-      }, 600);
-    }
-  } else {
-    setTimeout(() => {
-      document.getElementById('penalty-overlay').classList.add('show');
-    }, 600);
-  }
+  if(allCorrect){
+    if(currentRound+1>=ROUNDS.length){ sendResult('Complete'); setTimeout(()=>{ window.location.href = 'ir-ep2-game5.html'; },800); }
+    else { setTimeout(()=>{ document.getElementById('round-complete-msg').textContent=`Round ${currentRound+1} done! On to round ${currentRound+2}.`; document.getElementById('round-complete-overlay').classList.add('show'); },600); }
+  } else { setTimeout(()=>document.getElementById('penalty-overlay').classList.add('show'),600); }
 }
 
-function nextRound() {
-  document.getElementById('round-complete-overlay').classList.remove('show');
-  loadRound(currentRound + 1);
-}
-
-function dismissPenalty() {
-  document.getElementById('penalty-overlay').classList.remove('show');
-  loadRound(Math.max(0, currentRound - 1));
-}
+function nextRound() { document.getElementById('round-complete-overlay').classList.remove('show'); loadRound(currentRound+1); }
+function dismissPenalty() { document.getElementById('penalty-overlay').classList.remove('show'); loadRound(Math.max(0,currentRound-1)); }
 
 function sendResult(status) {
-  const now = new Date();
-  fetch(SHEET_URL, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      email: userEmail,
-      episode: EPISODE,
-      gameNumber: GAME_NUMBER,
-      date: now.toLocaleDateString(),
-      time: now.toLocaleTimeString(),
-      roundsCompleted: ROUNDS.length,
-      totalRounds: ROUNDS.length,
-      status: status
-    })
-  }).catch(err => console.error('Submit error:', err));
+  const now=new Date();
+  const payload=JSON.stringify({email:userEmail,episode:EPISODE,gameNumber:GAME_NUMBER,date:now.toLocaleDateString(),time:now.toLocaleTimeString(),roundsCompleted:ROUNDS.length,totalRounds:ROUNDS.length,status:status});
+  const form=document.createElement('form');
+  form.method='POST'; form.action=SHEET_URL; form.target='hidden-iframe';
+  const inp=document.createElement('input');
+  inp.type='hidden'; inp.name='data'; inp.value=payload;
+  form.appendChild(inp); document.body.appendChild(form); form.submit(); document.body.removeChild(form);
 }
 
-window.onload = function() {
-  checkDates();
-};
+window.onload=function(){ checkDates(); };
 </script>
 </body>
 </html>
