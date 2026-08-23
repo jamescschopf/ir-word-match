@@ -20,10 +20,10 @@
   .word-card.dragging { opacity: 0.5; border-color: #4a6fa5; }
   .word-card.correct { background: #d4edda; border-color: #28a745; color: #155724; cursor: default; }
   .word-card.incorrect { background: #f8d7da; border-color: #dc3545; }
-  .drop-zone { background: #eaf0fb; border: 2px dashed #a0b8d8; border-radius: 10px; padding: 10px 8px; text-align: center; font-size: 0.9em; min-height: 48px; display: flex; align-items: center; justify-content: center; color: #888; transition: background 0.2s, border-color 0.2s; }
+  .drop-zone { background: #eaf0fb; border: 2px dashed #a0b8d8; border-radius: 10px; padding: 10px 8px; text-align: center; font-size: 0.9em; min-height: 48px; display: flex; align-items: center; justify-content: center; color: #555; transition: background 0.2s, border-color 0.2s; }
   .drop-zone.over { background: #d0e4ff; border-color: #4a6fa5; }
-  .drop-zone.filled { background: white; border: 2px solid #c0cfe0; color: #333; cursor: grab; }
-  .drop-zone.correct { background: #d4edda; border-color: #28a745; color: #155724; cursor: default; }
+  .drop-zone.filled { background: white; border: 2px solid #c0cfe0; color: #333; }
+  .drop-zone.correct { background: #d4edda; border-color: #28a745; color: #155724; }
   .drop-zone.incorrect { background: #f8d7da; border-color: #dc3545; }
   .btn { margin-top: 18px; padding: 12px 32px; font-size: 1em; background: #4a6fa5; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%; max-width: 480px; }
   .btn:disabled { background: #aaa; cursor: not-allowed; }
@@ -57,9 +57,8 @@
   <p>Episode 1 closed on September 30, 2026. Please check for the next episode.</p>
 </div>
 
-<div id="main-content" style="display:none; width:100%; display:none; flex-direction:column; align-items:center;">
+<div id="main-content" style="display:none; flex-direction:column; align-items:center; width:100%;">
 
-  <!-- Email Auth Overlay -->
   <div class="overlay show" id="auth-overlay">
     <div class="modal email-form">
       <h2>Welcome!</h2>
@@ -70,7 +69,6 @@
     </div>
   </div>
 
-  <!-- Penalty Overlay -->
   <div class="overlay" id="penalty-overlay">
     <div class="modal">
       <h2>🔄 Not Quite!</h2>
@@ -79,7 +77,6 @@
     </div>
   </div>
 
-  <!-- Complete Overlay -->
   <div class="overlay" id="complete-overlay">
     <div class="modal">
       <h2>🎉 Game Complete!</h2>
@@ -98,7 +95,6 @@
   </div>
 
   <button class="btn" id="check-btn" onclick="checkAnswers()" disabled>Check Answers</button>
-
 </div>
 
 <script>
@@ -107,27 +103,24 @@ const EPISODE = 1;
 const GAME_NUMBER = 13;
 const OPEN_DATE = new Date("2026-09-01");
 const CLOSE_DATE = new Date("2026-09-30T23:59:59");
-
 const ROUNDS = [
-  [["base on","~에 근거하"],["establish","설립"],["economic principle","경제 원칙"],["post-WW2","제2차 세계대전 이후"]],
-  [["liberal principle","자유주의 원칙"],["economic policy","경제 정책"],["foreign investment","외국 투자"],["induce","유도"]],
-  [["term","용어"],["contrast","대조"],["conservatism","보수주의"],["meaning","의미"]],
-  [["minimal","최소한의"],["commit","지지"],["conservative","보수주의자"],["governmental intervention","정부 개입"]],
-  [["involvement","개입"],["prevent","방지"],["inequality","불평등"],["economist","경제학자"]],
-  [["property right","재산권"],["similar","비슷한"],["limited","제한된"],["private property","사유 재산"]],
-  [["basic assumption","기본 가정"],["government role","정부의 역할"],["realist assumption","현실주의 가정"],["partial","일면적인"]],
-  [["structured","구조화된"],["international interaction","국제적 상호작용"],["highly","고도로"],["truth","진리"]],
-  [["UN","국제연합"],["reciprocity","상호주의"],["institution","제도"],["law","법"]],
-  [["oversimplify","지나치게 단순화"],["promote","증진"],["complex","복잡한"],["unitary actor","단일 행위자"]]
+  [["economic principle","경제 원칙"],["post-WW2","제2차 세계대전 이후"],["base on","~에 근거하"],["establish","설립"]],
+  [["foreign investment","외국 투자"],["liberal principle","자유주의 원칙"],["induce","유도"],["economic policy","경제 정책"]],
+  [["contrast","대조"],["meaning","의미"],["conservatism","보수주의"],["term","용어"]],
+  [["conservative","보수주의자"],["commit","지지"],["governmental intervention","정부 개입"],["minimal","최소한의"]],
+  [["economist","경제학자"],["inequality","불평등"],["prevent","방지"],["involvement","개입"]],
+  [["similar","비슷한"],["private property","사유 재산"],["limited","제한된"],["property right","재산권"]],
+  [["partial","일면적인"],["realist assumption","현실주의 가정"],["basic assumption","기본 가정"],["government role","정부의 역할"]],
+  [["structured","구조화된"],["truth","진리"],["international interaction","국제적 상호작용"],["highly","고도로"]],
+  [["reciprocity","상호주의"],["UN","국제연합"],["institution","제도"],["law","법"]],
+  [["oversimplify","지나치게 단순화"],["promote","증진"],["unitary actor","단일 행위자"],["complex","복잡한"]]
 ];
 
 let currentRound = 0;
 let userEmail = "";
 let dragSrc = null;
-let dragSrcType = null;
 let filledDrops = {};
 
-// Date check
 function checkDates() {
   const now = new Date();
   if (now < OPEN_DATE) {
@@ -142,7 +135,6 @@ function checkDates() {
   return true;
 }
 
-// Email check via JSONP
 function checkEmail() {
   const input = document.getElementById('email-input').value.trim().toLowerCase();
   const cb = 'cb_' + Date.now();
@@ -163,8 +155,9 @@ function checkEmail() {
   document.body.appendChild(script);
 }
 
-document.getElementById('email-input').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') checkEmail();
+document.addEventListener('DOMContentLoaded', function() {
+  const input = document.getElementById('email-input');
+  if (input) input.addEventListener('keydown', function(e) { if (e.key === 'Enter') checkEmail(); });
 });
 
 function loadRound(idx) {
@@ -174,12 +167,14 @@ function loadRound(idx) {
   document.getElementById('check-btn').disabled = true;
 
   const pairs = ROUNDS[idx];
+  // English words fixed on left, Korean shuffled on right as drop zones
   const engWords = pairs.map(p => p[0]);
-  const korWords = [...pairs.map(p => p[1])];
-  // Shuffle Korean words
-  for (let i = korWords.length - 1; i > 0; i--) {
+  const korWords = pairs.map(p => p[1]);
+  // Shuffle Korean
+  const shuffledKor = [...korWords];
+  for (let i = shuffledKor.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [korWords[i], korWords[j]] = [korWords[j], korWords[i]];
+    [shuffledKor[i], shuffledKor[j]] = [shuffledKor[j], shuffledKor[i]];
   }
 
   const engCol = document.getElementById('eng-col');
@@ -187,58 +182,40 @@ function loadRound(idx) {
   engCol.innerHTML = '';
   korCol.innerHTML = '';
 
-  // Build English drop zones
-  engWords.forEach((word, i) => {
-    const dz = document.createElement('div');
-    dz.className = 'drop-zone';
-    dz.dataset.eng = word;
-    dz.dataset.index = i;
-    dz.textContent = word;
-    dz.style.color = '#333';
-    dz.style.borderStyle = 'solid';
-    dz.style.background = 'white';
-    engCol.appendChild(dz);
-  });
-
-  // Build Korean draggable cards
-  korWords.forEach((word, i) => {
+  // English: draggable cards on the LEFT
+  engWords.forEach((word) => {
     const card = document.createElement('div');
     card.className = 'word-card';
     card.draggable = true;
     card.textContent = word;
-    card.dataset.kor = word;
-    card.dataset.origin = 'bank';
-    card.dataset.bankIndex = i;
-
+    card.dataset.eng = word;
     card.addEventListener('dragstart', onDragStart);
     card.addEventListener('dragend', onDragEnd);
-    korCol.appendChild(card);
+    engCol.appendChild(card);
   });
 
-  // Drop zone events on right col (Korean bank slots)
-  // We don't need drop zones on left — English words are fixed labels
-
-  // Actually implement: drag Korean cards onto English drop zones
-  setupDropZones();
-}
-
-function setupDropZones() {
-  document.querySelectorAll('.drop-zone').forEach(dz => {
+  // Korean: drop zones on the RIGHT (shuffled)
+  shuffledKor.forEach((word) => {
+    const dz = document.createElement('div');
+    dz.className = 'drop-zone';
+    dz.dataset.kor = word;
+    dz.textContent = word;
     dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
     dz.addEventListener('dragleave', () => dz.classList.remove('over'));
     dz.addEventListener('drop', onDrop);
+    korCol.appendChild(dz);
   });
 }
 
 function onDragStart(e) {
-  dragSrc = e.target;
-  e.target.classList.add('dragging');
+  dragSrc = e.currentTarget;
+  dragSrc.classList.add('dragging');
   e.dataTransfer.effectAllowed = 'move';
-  e.dataTransfer.setData('text/plain', e.target.dataset.kor);
+  e.dataTransfer.setData('text/plain', dragSrc.dataset.eng);
 }
 
 function onDragEnd(e) {
-  e.target.classList.remove('dragging');
+  e.currentTarget.classList.remove('dragging');
 }
 
 function onDrop(e) {
@@ -247,65 +224,47 @@ function onDrop(e) {
   dz.classList.remove('over');
   if (!dragSrc) return;
 
-  const korWord = dragSrc.dataset.kor;
-  const engWord = dz.dataset.eng;
+  const engWord = dragSrc.dataset.eng;
+  const korWord = dz.dataset.kor;
 
-  // If drop zone already has a card, send it back to bank
-  if (filledDrops[engWord]) {
-    returnToBank(filledDrops[engWord]);
+  // If this drop zone already has an assignment, return that eng card to bank
+  if (filledDrops[korWord]) {
+    returnToBank(filledDrops[korWord]);
   }
 
-  // If dragSrc was in another drop zone, clear that drop zone
-  const prevEng = dragSrc.dataset.currentDz;
-  if (prevEng) {
-    const prevDz = document.querySelector(`.drop-zone[data-eng="${prevEng}"]`);
-    if (prevDz) {
-      prevDz.textContent = prevEng;
-      prevDz.style.color = '#333';
-      prevDz.style.background = 'white';
-      prevDz.style.borderStyle = 'solid';
-      prevDz.classList.remove('filled');
-    }
-    delete filledDrops[prevEng];
-  } else {
-    // Remove from bank
-    dragSrc.remove();
+  // If dragSrc was already assigned to another drop zone, clear that
+  const prevKor = dragSrc.dataset.currentDz;
+  if (prevKor && prevKor !== korWord) {
+    delete filledDrops[prevKor];
+    // Reset that drop zone appearance
+    document.querySelectorAll('.drop-zone').forEach(z => {
+      if (z.dataset.kor === prevKor) {
+        z.classList.remove('filled');
+        z.textContent = prevKor;
+      }
+    });
   }
 
-  // Place in drop zone
-  filledDrops[engWord] = korWord;
-  dragSrc.dataset.currentDz = engWord;
+  // Place assignment
+  filledDrops[korWord] = engWord;
+  dragSrc.dataset.currentDz = korWord;
+  dragSrc.style.display = 'none'; // hide from bank
 
-  // Show Korean word in the drop zone alongside English
-  dz.textContent = engWord + ' → ' + korWord;
   dz.classList.add('filled');
-
-  // Make drop zone draggable to allow re-dragging
-  dz.draggable = true;
-  dz.dataset.kor = korWord;
-  dz.addEventListener('dragstart', onDzDragStart);
+  dz.textContent = korWord + ' ← ' + engWord;
 
   checkAllFilled();
   dragSrc = null;
 }
 
-function onDzDragStart(e) {
-  dragSrc = e.currentTarget;
-  dragSrc.dataset.currentDz = dragSrc.dataset.eng;
-  e.dataTransfer.setData('text/plain', dragSrc.dataset.kor);
-  e.dataTransfer.effectAllowed = 'move';
-}
-
-function returnToBank(korWord) {
-  const korCol = document.getElementById('kor-col');
-  const card = document.createElement('div');
-  card.className = 'word-card';
-  card.draggable = true;
-  card.textContent = korWord;
-  card.dataset.kor = korWord;
-  card.addEventListener('dragstart', onDragStart);
-  card.addEventListener('dragend', onDragEnd);
-  korCol.appendChild(card);
+function returnToBank(engWord) {
+  const engCol = document.getElementById('eng-col');
+  engCol.querySelectorAll('.word-card').forEach(card => {
+    if (card.dataset.eng === engWord) {
+      card.style.display = 'flex';
+      card.dataset.currentDz = '';
+    }
+  });
 }
 
 function checkAllFilled() {
@@ -317,14 +276,18 @@ function checkAllFilled() {
 function checkAnswers() {
   const pairs = ROUNDS[currentRound];
   const correctMap = {};
-  pairs.forEach(p => correctMap[p[0]] = p[1]);
+  pairs.forEach(p => correctMap[p[1]] = p[0]); // kor -> eng
 
   let allCorrect = true;
   document.querySelectorAll('.drop-zone').forEach(dz => {
-    const eng = dz.dataset.eng;
-    const kor = filledDrops[eng];
-    if (kor === correctMap[eng]) {
+    const kor = dz.dataset.kor;
+    const eng = filledDrops[kor];
+    if (eng === correctMap[kor]) {
       dz.classList.add('correct');
+      // Also mark the eng card
+      document.querySelectorAll('.word-card').forEach(card => {
+        if (card.dataset.eng === eng) card.classList.add('correct');
+      });
     } else {
       dz.classList.add('incorrect');
       allCorrect = false;
@@ -349,8 +312,7 @@ function checkAnswers() {
 
 function dismissPenalty() {
   document.getElementById('penalty-overlay').classList.remove('show');
-  const goTo = Math.max(0, currentRound - 1);
-  loadRound(goTo);
+  loadRound(Math.max(0, currentRound - 1));
 }
 
 function sendResult(status) {
@@ -371,11 +333,8 @@ function sendResult(status) {
   }).catch(err => console.error('Submit error:', err));
 }
 
-// Init
 window.onload = function() {
-  if (checkDates()) {
-    // show auth overlay (already shown by default)
-  }
+  checkDates();
 };
 </script>
 </body>
