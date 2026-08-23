@@ -44,7 +44,7 @@
 <div class="header">
   <h1>International Relations</h1>
   <h2>Episode 1 | September 1 – September 30</h2>
-  <h3>Game 1</h3>
+  <h3>Game 1 of 15</h3>
 </div>
 
 <div id="closed-before" class="closed-msg" style="display:none">
@@ -77,11 +77,18 @@
     </div>
   </div>
 
+  <div class="overlay" id="round-complete-overlay">
+    <div class="modal">
+      <h2>✅ Round Complete!</h2>
+      <p id="round-complete-msg"></p>
+      <button class="btn" onclick="nextRound()">Continue</button>
+    </div>
+  </div>
+
   <div class="overlay" id="complete-overlay">
     <div class="modal">
-      <h2>🎉 Game Complete!</h2>
-      <p>You finished all 10 rounds!</p>
-      <button class="btn" onclick="location.reload()">Play Again</button>
+      <h2>🎉 Episode 1 Complete!</h2>
+      <p>You have completed all games in Episode 1. Well done!</p>
     </div>
   </div>
 
@@ -101,19 +108,19 @@
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbzwHluspMZWtyTlhjcxcGIRlizvS6F49CEH1DD-WUtaHZnaUuXww88Kl5F06n-i076Zlw/exec";
 const EPISODE = 1;
 const GAME_NUMBER = 1;
-const OPEN_DATE = new Date("2026-09-01");
+const OPEN_DATE = new Date("2026-08-23");
 const CLOSE_DATE = new Date("2026-09-30T23:59:59");
 const ROUNDS = [
-  [["class topic","수업의 주제"],["introduction","소개"],["review","검토"],["course","수업"]],
-  [["lecture","강의"],["class period","수업 시간"],["grading criteria","채점 기준"],["value","가치"]],
-  [["attend","수강"],["learn","배우"],["practical","실질적인"],["skill","기술"]],
+  [["review","검토"],["course","수업"],["class topic","수업의 주제"],["introduction","소개"]],
+  [["value","가치"],["grading criteria","채점 기준"],["class period","수업 시간"],["lecture","강의"]],
+  [["learn","배우"],["practical","실질적인"],["attend","수강"],["skill","기술"]],
   [["in particular","특히"],["career","직업"],["business","실업계"],["academics","학계"]],
-  [["law","법계"],["government policy making","정부 정책 수립"],["evaluate","평가"],["think logically","논리적으로 생각"]],
-  [["various","여러 가지"],["different","다른"],["useful","도움이 되는"],["argument","논쟁"]],
-  [["economic","경제적인"],["political","정치적인"],["topic","과목"],["21st century","21세기"]],
-  [["stable","안정적인"],["focus on","초점을 맞추"],["overcome","극복"],["international war","국제 전쟁"]],
-  [["Realism","현실주의"],["prosperous","번영된"],["strictly defined","엄격하게 정의할 때"],["major theory","주요 이론"]],
-  [["field","분야"],["closely connected","밀접하게 연결된"],["concern","관계에 관한 것"],["relationship","관계"]]
+  [["think logically","논리적으로 생각"],["government policy making","정부 정책 수립"],["law","법계"],["evaluate","평가"]],
+  [["different","다른"],["various","여러 가지"],["argument","논쟁"],["useful","도움이 되는"]],
+  [["topic","과목"],["21st century","21세기"],["political","정치적인"],["economic","경제적인"]],
+  [["focus on","초점을 맞추"],["international war","국제 전쟁"],["overcome","극복"],["stable","안정적인"]],
+  [["major theory","주요 이론"],["Realism","현실주의"],["strictly defined","엄격하게 정의할 때"],["prosperous","번영된"]],
+  [["relationship","관계"],["concern","관계에 관한 것"],["closely connected","밀접하게 연결된"],["field","분야"]]
 ];
 
 let currentRound = 0;
@@ -167,11 +174,8 @@ function loadRound(idx) {
   document.getElementById('check-btn').disabled = true;
 
   const pairs = ROUNDS[idx];
-  // English words fixed on left, Korean shuffled on right as drop zones
   const engWords = pairs.map(p => p[0]);
-  const korWords = pairs.map(p => p[1]);
-  // Shuffle Korean
-  const shuffledKor = [...korWords];
+  const shuffledKor = [...pairs.map(p => p[1])];
   for (let i = shuffledKor.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [shuffledKor[i], shuffledKor[j]] = [shuffledKor[j], shuffledKor[i]];
@@ -182,7 +186,6 @@ function loadRound(idx) {
   engCol.innerHTML = '';
   korCol.innerHTML = '';
 
-  // English: draggable cards on the LEFT
   engWords.forEach((word) => {
     const card = document.createElement('div');
     card.className = 'word-card';
@@ -194,7 +197,6 @@ function loadRound(idx) {
     engCol.appendChild(card);
   });
 
-  // Korean: drop zones on the RIGHT (shuffled)
   shuffledKor.forEach((word) => {
     const dz = document.createElement('div');
     dz.className = 'drop-zone';
@@ -227,16 +229,13 @@ function onDrop(e) {
   const engWord = dragSrc.dataset.eng;
   const korWord = dz.dataset.kor;
 
-  // If this drop zone already has an assignment, return that eng card to bank
   if (filledDrops[korWord]) {
     returnToBank(filledDrops[korWord]);
   }
 
-  // If dragSrc was already assigned to another drop zone, clear that
   const prevKor = dragSrc.dataset.currentDz;
   if (prevKor && prevKor !== korWord) {
     delete filledDrops[prevKor];
-    // Reset that drop zone appearance
     document.querySelectorAll('.drop-zone').forEach(z => {
       if (z.dataset.kor === prevKor) {
         z.classList.remove('filled');
@@ -245,11 +244,9 @@ function onDrop(e) {
     });
   }
 
-  // Place assignment
   filledDrops[korWord] = engWord;
   dragSrc.dataset.currentDz = korWord;
-  dragSrc.style.display = 'none'; // hide from bank
-
+  dragSrc.style.display = 'none';
   dz.classList.add('filled');
   dz.textContent = korWord + ' ← ' + engWord;
 
@@ -258,8 +255,7 @@ function onDrop(e) {
 }
 
 function returnToBank(engWord) {
-  const engCol = document.getElementById('eng-col');
-  engCol.querySelectorAll('.word-card').forEach(card => {
+  document.getElementById('eng-col').querySelectorAll('.word-card').forEach(card => {
     if (card.dataset.eng === engWord) {
       card.style.display = 'flex';
       card.dataset.currentDz = '';
@@ -276,7 +272,7 @@ function checkAllFilled() {
 function checkAnswers() {
   const pairs = ROUNDS[currentRound];
   const correctMap = {};
-  pairs.forEach(p => correctMap[p[1]] = p[0]); // kor -> eng
+  pairs.forEach(p => correctMap[p[1]] = p[0]);
 
   let allCorrect = true;
   document.querySelectorAll('.drop-zone').forEach(dz => {
@@ -284,7 +280,6 @@ function checkAnswers() {
     const eng = filledDrops[kor];
     if (eng === correctMap[kor]) {
       dz.classList.add('correct');
-      // Also mark the eng card
       document.querySelectorAll('.word-card').forEach(card => {
         if (card.dataset.eng === eng) card.classList.add('correct');
       });
@@ -295,19 +290,28 @@ function checkAnswers() {
   });
 
   if (allCorrect) {
-    setTimeout(() => {
-      if (currentRound + 1 >= ROUNDS.length) {
-        sendResult('Complete');
-        document.getElementById('complete-overlay').classList.add('show');
-      } else {
-        loadRound(currentRound + 1);
-      }
-    }, 600);
+    if (currentRound + 1 >= ROUNDS.length) {
+      sendResult('Complete');
+      setTimeout(() => {
+        window.location.href = 'ir-ep1-game2.html';
+      }, 800);
+    } else {
+      setTimeout(() => {
+        const msg = document.getElementById('round-complete-msg');
+        msg.textContent = `Round ${currentRound+1} done! On to round ${currentRound+2}.`;
+        document.getElementById('round-complete-overlay').classList.add('show');
+      }, 600);
+    }
   } else {
     setTimeout(() => {
       document.getElementById('penalty-overlay').classList.add('show');
     }, 600);
   }
+}
+
+function nextRound() {
+  document.getElementById('round-complete-overlay').classList.remove('show');
+  loadRound(currentRound + 1);
 }
 
 function dismissPenalty() {

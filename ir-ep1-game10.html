@@ -44,7 +44,7 @@
 <div class="header">
   <h1>International Relations</h1>
   <h2>Episode 1 | September 1 – September 30</h2>
-  <h3>Game 10</h3>
+  <h3>Game 10 of 15</h3>
 </div>
 
 <div id="closed-before" class="closed-msg" style="display:none">
@@ -77,11 +77,18 @@
     </div>
   </div>
 
+  <div class="overlay" id="round-complete-overlay">
+    <div class="modal">
+      <h2>✅ Round Complete!</h2>
+      <p id="round-complete-msg"></p>
+      <button class="btn" onclick="nextRound()">Continue</button>
+    </div>
+  </div>
+
   <div class="overlay" id="complete-overlay">
     <div class="modal">
-      <h2>🎉 Game Complete!</h2>
-      <p>You finished all 10 rounds!</p>
-      <button class="btn" onclick="location.reload()">Play Again</button>
+      <h2>🎉 Episode 1 Complete!</h2>
+      <p>You have completed all games in Episode 1. Well done!</p>
     </div>
   </div>
 
@@ -101,19 +108,19 @@
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbzwHluspMZWtyTlhjcxcGIRlizvS6F49CEH1DD-WUtaHZnaUuXww88Kl5F06n-i076Zlw/exec";
 const EPISODE = 1;
 const GAME_NUMBER = 10;
-const OPEN_DATE = new Date("2026-09-01");
+const OPEN_DATE = new Date("2026-08-23");
 const CLOSE_DATE = new Date("2026-09-30T23:59:59");
 const ROUNDS = [
-  [["short term","단기"],["element","요소"],["power capability","힘의 능력"],["exercise influence","영향력을 행사"]],
-  [["national will","국민적 의지"],["intangible","무형의"],["diplomatic skill","외교 기술"],["popular support","대중의 지지"]],
-  [["GDP","국내총생산"],["draw on","뽑아 쓰"],["power resource","힘의 자원"],["long term","장기"]],
-  [["natural resource","천연자원"],["population","인구"],["geography","지리"],["change","변하"]],
-  [["measure","지표"],["potential power","잠재적 힘"],["shape","형성"],["slowly","느린 속도로"]],
+  [["element","요소"],["short term","단기"],["power capability","힘의 능력"],["exercise influence","영향력을 행사"]],
+  [["popular support","대중의 지지"],["diplomatic skill","외교 기술"],["intangible","무형의"],["national will","국민적 의지"]],
+  [["long term","장기"],["draw on","뽑아 쓰"],["power resource","힘의 자원"],["GDP","국내총생산"]],
+  [["population","인구"],["change","변하"],["geography","지리"],["natural resource","천연자원"]],
+  [["potential power","잠재적 힘"],["shape","형성"],["measure","지표"],["slowly","느린 속도로"]],
   [["protect","보호"],["technological level","기술 수준"],["achieve","이루"],["relative position","상대적 위치"]],
-  [["surpass","능가"],["result","결과"],["security dilemma","안보 딜레마"],["seek","추구"]],
-  [["worse off","더 나쁜 상태"],["mathematics","수학"],["armament","군비"],["build up","증강"]],
-  [["choose","선택"],["setting","상황"],["game","게임"],["concern","관련되"]],
-  [["payoff","결과물"],["combination","조합"],["repeatedly","반복적으로"],["alternative","대안"]]
+  [["result","결과"],["surpass","능가"],["seek","추구"],["security dilemma","안보 딜레마"]],
+  [["armament","군비"],["build up","증강"],["worse off","더 나쁜 상태"],["mathematics","수학"]],
+  [["game","게임"],["setting","상황"],["concern","관련되"],["choose","선택"]],
+  [["combination","조합"],["payoff","결과물"],["repeatedly","반복적으로"],["alternative","대안"]]
 ];
 
 let currentRound = 0;
@@ -167,11 +174,8 @@ function loadRound(idx) {
   document.getElementById('check-btn').disabled = true;
 
   const pairs = ROUNDS[idx];
-  // English words fixed on left, Korean shuffled on right as drop zones
   const engWords = pairs.map(p => p[0]);
-  const korWords = pairs.map(p => p[1]);
-  // Shuffle Korean
-  const shuffledKor = [...korWords];
+  const shuffledKor = [...pairs.map(p => p[1])];
   for (let i = shuffledKor.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [shuffledKor[i], shuffledKor[j]] = [shuffledKor[j], shuffledKor[i]];
@@ -182,7 +186,6 @@ function loadRound(idx) {
   engCol.innerHTML = '';
   korCol.innerHTML = '';
 
-  // English: draggable cards on the LEFT
   engWords.forEach((word) => {
     const card = document.createElement('div');
     card.className = 'word-card';
@@ -194,7 +197,6 @@ function loadRound(idx) {
     engCol.appendChild(card);
   });
 
-  // Korean: drop zones on the RIGHT (shuffled)
   shuffledKor.forEach((word) => {
     const dz = document.createElement('div');
     dz.className = 'drop-zone';
@@ -227,16 +229,13 @@ function onDrop(e) {
   const engWord = dragSrc.dataset.eng;
   const korWord = dz.dataset.kor;
 
-  // If this drop zone already has an assignment, return that eng card to bank
   if (filledDrops[korWord]) {
     returnToBank(filledDrops[korWord]);
   }
 
-  // If dragSrc was already assigned to another drop zone, clear that
   const prevKor = dragSrc.dataset.currentDz;
   if (prevKor && prevKor !== korWord) {
     delete filledDrops[prevKor];
-    // Reset that drop zone appearance
     document.querySelectorAll('.drop-zone').forEach(z => {
       if (z.dataset.kor === prevKor) {
         z.classList.remove('filled');
@@ -245,11 +244,9 @@ function onDrop(e) {
     });
   }
 
-  // Place assignment
   filledDrops[korWord] = engWord;
   dragSrc.dataset.currentDz = korWord;
-  dragSrc.style.display = 'none'; // hide from bank
-
+  dragSrc.style.display = 'none';
   dz.classList.add('filled');
   dz.textContent = korWord + ' ← ' + engWord;
 
@@ -258,8 +255,7 @@ function onDrop(e) {
 }
 
 function returnToBank(engWord) {
-  const engCol = document.getElementById('eng-col');
-  engCol.querySelectorAll('.word-card').forEach(card => {
+  document.getElementById('eng-col').querySelectorAll('.word-card').forEach(card => {
     if (card.dataset.eng === engWord) {
       card.style.display = 'flex';
       card.dataset.currentDz = '';
@@ -276,7 +272,7 @@ function checkAllFilled() {
 function checkAnswers() {
   const pairs = ROUNDS[currentRound];
   const correctMap = {};
-  pairs.forEach(p => correctMap[p[1]] = p[0]); // kor -> eng
+  pairs.forEach(p => correctMap[p[1]] = p[0]);
 
   let allCorrect = true;
   document.querySelectorAll('.drop-zone').forEach(dz => {
@@ -284,7 +280,6 @@ function checkAnswers() {
     const eng = filledDrops[kor];
     if (eng === correctMap[kor]) {
       dz.classList.add('correct');
-      // Also mark the eng card
       document.querySelectorAll('.word-card').forEach(card => {
         if (card.dataset.eng === eng) card.classList.add('correct');
       });
@@ -295,19 +290,28 @@ function checkAnswers() {
   });
 
   if (allCorrect) {
-    setTimeout(() => {
-      if (currentRound + 1 >= ROUNDS.length) {
-        sendResult('Complete');
-        document.getElementById('complete-overlay').classList.add('show');
-      } else {
-        loadRound(currentRound + 1);
-      }
-    }, 600);
+    if (currentRound + 1 >= ROUNDS.length) {
+      sendResult('Complete');
+      setTimeout(() => {
+        window.location.href = 'ir-ep1-game11.html';
+      }, 800);
+    } else {
+      setTimeout(() => {
+        const msg = document.getElementById('round-complete-msg');
+        msg.textContent = `Round ${currentRound+1} done! On to round ${currentRound+2}.`;
+        document.getElementById('round-complete-overlay').classList.add('show');
+      }, 600);
+    }
   } else {
     setTimeout(() => {
       document.getElementById('penalty-overlay').classList.add('show');
     }, 600);
   }
+}
+
+function nextRound() {
+  document.getElementById('round-complete-overlay').classList.remove('show');
+  loadRound(currentRound + 1);
 }
 
 function dismissPenalty() {

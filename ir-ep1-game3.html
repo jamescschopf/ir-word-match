@@ -44,7 +44,7 @@
 <div class="header">
   <h1>International Relations</h1>
   <h2>Episode 1 | September 1 – September 30</h2>
-  <h3>Game 3</h3>
+  <h3>Game 3 of 15</h3>
 </div>
 
 <div id="closed-before" class="closed-msg" style="display:none">
@@ -77,11 +77,18 @@
     </div>
   </div>
 
+  <div class="overlay" id="round-complete-overlay">
+    <div class="modal">
+      <h2>✅ Round Complete!</h2>
+      <p id="round-complete-msg"></p>
+      <button class="btn" onclick="nextRound()">Continue</button>
+    </div>
+  </div>
+
   <div class="overlay" id="complete-overlay">
     <div class="modal">
-      <h2>🎉 Game Complete!</h2>
-      <p>You finished all 10 rounds!</p>
-      <button class="btn" onclick="location.reload()">Play Again</button>
+      <h2>🎉 Episode 1 Complete!</h2>
+      <p>You have completed all games in Episode 1. Well done!</p>
     </div>
   </div>
 
@@ -101,19 +108,19 @@
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbzwHluspMZWtyTlhjcxcGIRlizvS6F49CEH1DD-WUtaHZnaUuXww88Kl5F06n-i076Zlw/exec";
 const EPISODE = 1;
 const GAME_NUMBER = 3;
-const OPEN_DATE = new Date("2026-09-01");
+const OPEN_DATE = new Date("2026-08-23");
 const CLOSE_DATE = new Date("2026-09-30T23:59:59");
 const ROUNDS = [
-  [["decision","결정"],["towards","~을 상대로"],["government action","정부의 행동"],["research","연구"]],
-  [["economics","경제학"],["sociology","사회학"],["interdisciplinary","학제간"],["history","역사학"]],
-  [["traditionally","전통적으로"],["define","정의"],["war and peace","전쟁과 평화"],["discipline","분과 학문"]],
-  [["international security studies","국제 안보 연구"],["terrorism","테러리즘"],["nuclear proliferation","핵무기 확산"],["issue","문제"]],
-  [["central","중심적인"],["trade relations","무역 관계"],["main subfield","주요 하위 분야"],["second","두 번째"]],
-  [["institution","기관"],["politically","정치적으로"],["financial relations","금융 관계"],["cooperate","협력"]],
-  [["regulate","규제"],["rich nation","부국"],["international economic transaction","국제 경제 교류"],["attention","관심"]],
-  [["economic dependency","경제적 의존"],["poor nation","빈국"],["global relations","세계 관계"],["debt","외채"]],
-  [["foreign aid","외국 원조"],["East-West confrontation","동서 대결"],["technology transfer","기술 이전"],["recede","사라지"]],
-  [["development","경제 발전"],["environmental issue","환경 문제"],["security","안보"],["environmental management","환경 관리"]]
+  [["government action","정부의 행동"],["towards","~을 상대로"],["research","연구"],["decision","결정"]],
+  [["sociology","사회학"],["history","역사학"],["interdisciplinary","학제간"],["economics","경제학"]],
+  [["discipline","분과 학문"],["traditionally","전통적으로"],["war and peace","전쟁과 평화"],["define","정의"]],
+  [["international security studies","국제 안보 연구"],["terrorism","테러리즘"],["issue","문제"],["nuclear proliferation","핵무기 확산"]],
+  [["main subfield","주요 하위 분야"],["central","중심적인"],["trade relations","무역 관계"],["second","두 번째"]],
+  [["cooperate","협력"],["institution","기관"],["politically","정치적으로"],["financial relations","금융 관계"]],
+  [["attention","관심"],["rich nation","부국"],["regulate","규제"],["international economic transaction","국제 경제 교류"]],
+  [["debt","외채"],["poor nation","빈국"],["economic dependency","경제적 의존"],["global relations","세계 관계"]],
+  [["East-West confrontation","동서 대결"],["technology transfer","기술 이전"],["foreign aid","외국 원조"],["recede","사라지"]],
+  [["security","안보"],["environmental management","환경 관리"],["development","경제 발전"],["environmental issue","환경 문제"]]
 ];
 
 let currentRound = 0;
@@ -167,11 +174,8 @@ function loadRound(idx) {
   document.getElementById('check-btn').disabled = true;
 
   const pairs = ROUNDS[idx];
-  // English words fixed on left, Korean shuffled on right as drop zones
   const engWords = pairs.map(p => p[0]);
-  const korWords = pairs.map(p => p[1]);
-  // Shuffle Korean
-  const shuffledKor = [...korWords];
+  const shuffledKor = [...pairs.map(p => p[1])];
   for (let i = shuffledKor.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [shuffledKor[i], shuffledKor[j]] = [shuffledKor[j], shuffledKor[i]];
@@ -182,7 +186,6 @@ function loadRound(idx) {
   engCol.innerHTML = '';
   korCol.innerHTML = '';
 
-  // English: draggable cards on the LEFT
   engWords.forEach((word) => {
     const card = document.createElement('div');
     card.className = 'word-card';
@@ -194,7 +197,6 @@ function loadRound(idx) {
     engCol.appendChild(card);
   });
 
-  // Korean: drop zones on the RIGHT (shuffled)
   shuffledKor.forEach((word) => {
     const dz = document.createElement('div');
     dz.className = 'drop-zone';
@@ -227,16 +229,13 @@ function onDrop(e) {
   const engWord = dragSrc.dataset.eng;
   const korWord = dz.dataset.kor;
 
-  // If this drop zone already has an assignment, return that eng card to bank
   if (filledDrops[korWord]) {
     returnToBank(filledDrops[korWord]);
   }
 
-  // If dragSrc was already assigned to another drop zone, clear that
   const prevKor = dragSrc.dataset.currentDz;
   if (prevKor && prevKor !== korWord) {
     delete filledDrops[prevKor];
-    // Reset that drop zone appearance
     document.querySelectorAll('.drop-zone').forEach(z => {
       if (z.dataset.kor === prevKor) {
         z.classList.remove('filled');
@@ -245,11 +244,9 @@ function onDrop(e) {
     });
   }
 
-  // Place assignment
   filledDrops[korWord] = engWord;
   dragSrc.dataset.currentDz = korWord;
-  dragSrc.style.display = 'none'; // hide from bank
-
+  dragSrc.style.display = 'none';
   dz.classList.add('filled');
   dz.textContent = korWord + ' ← ' + engWord;
 
@@ -258,8 +255,7 @@ function onDrop(e) {
 }
 
 function returnToBank(engWord) {
-  const engCol = document.getElementById('eng-col');
-  engCol.querySelectorAll('.word-card').forEach(card => {
+  document.getElementById('eng-col').querySelectorAll('.word-card').forEach(card => {
     if (card.dataset.eng === engWord) {
       card.style.display = 'flex';
       card.dataset.currentDz = '';
@@ -276,7 +272,7 @@ function checkAllFilled() {
 function checkAnswers() {
   const pairs = ROUNDS[currentRound];
   const correctMap = {};
-  pairs.forEach(p => correctMap[p[1]] = p[0]); // kor -> eng
+  pairs.forEach(p => correctMap[p[1]] = p[0]);
 
   let allCorrect = true;
   document.querySelectorAll('.drop-zone').forEach(dz => {
@@ -284,7 +280,6 @@ function checkAnswers() {
     const eng = filledDrops[kor];
     if (eng === correctMap[kor]) {
       dz.classList.add('correct');
-      // Also mark the eng card
       document.querySelectorAll('.word-card').forEach(card => {
         if (card.dataset.eng === eng) card.classList.add('correct');
       });
@@ -295,19 +290,28 @@ function checkAnswers() {
   });
 
   if (allCorrect) {
-    setTimeout(() => {
-      if (currentRound + 1 >= ROUNDS.length) {
-        sendResult('Complete');
-        document.getElementById('complete-overlay').classList.add('show');
-      } else {
-        loadRound(currentRound + 1);
-      }
-    }, 600);
+    if (currentRound + 1 >= ROUNDS.length) {
+      sendResult('Complete');
+      setTimeout(() => {
+        window.location.href = 'ir-ep1-game4.html';
+      }, 800);
+    } else {
+      setTimeout(() => {
+        const msg = document.getElementById('round-complete-msg');
+        msg.textContent = `Round ${currentRound+1} done! On to round ${currentRound+2}.`;
+        document.getElementById('round-complete-overlay').classList.add('show');
+      }, 600);
+    }
   } else {
     setTimeout(() => {
       document.getElementById('penalty-overlay').classList.add('show');
     }, 600);
   }
+}
+
+function nextRound() {
+  document.getElementById('round-complete-overlay').classList.remove('show');
+  loadRound(currentRound + 1);
 }
 
 function dismissPenalty() {

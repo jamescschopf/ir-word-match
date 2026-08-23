@@ -44,7 +44,7 @@
 <div class="header">
   <h1>International Relations</h1>
   <h2>Episode 1 | September 1 – September 30</h2>
-  <h3>Game 7</h3>
+  <h3>Game 7 of 15</h3>
 </div>
 
 <div id="closed-before" class="closed-msg" style="display:none">
@@ -77,11 +77,18 @@
     </div>
   </div>
 
+  <div class="overlay" id="round-complete-overlay">
+    <div class="modal">
+      <h2>✅ Round Complete!</h2>
+      <p id="round-complete-msg"></p>
+      <button class="btn" onclick="nextRound()">Continue</button>
+    </div>
+  </div>
+
   <div class="overlay" id="complete-overlay">
     <div class="modal">
-      <h2>🎉 Game Complete!</h2>
-      <p>You finished all 10 rounds!</p>
-      <button class="btn" onclick="location.reload()">Play Again</button>
+      <h2>🎉 Episode 1 Complete!</h2>
+      <p>You have completed all games in Episode 1. Well done!</p>
     </div>
   </div>
 
@@ -101,19 +108,19 @@
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbzwHluspMZWtyTlhjcxcGIRlizvS6F49CEH1DD-WUtaHZnaUuXww88Kl5F06n-i076Zlw/exec";
 const EPISODE = 1;
 const GAME_NUMBER = 7;
-const OPEN_DATE = new Date("2026-09-01");
+const OPEN_DATE = new Date("2026-08-23");
 const CLOSE_DATE = new Date("2026-09-30T23:59:59");
 const ROUNDS = [
-  [["Greek city-state","그리스 도시 국가"],["writer","작가"],["weak","약자"],["strong","강자"]],
-  [["reaction","반작용"],["accept","받아들이"],["develop","발달"],["liberal idealism","자유주의적 이상주의"]],
-  [["basically","기본적으로"],["Idealist","이상주의자"],["good","선한"],["human nature","인간의 본성"]],
-  [["World War","세계대전"],["active","활발한"],["basis","기초"],["international relationship","국제관계"]],
-  [["Woodrow Wilson","우드로 윌슨"],["experience","경험"],["painful","고통스러운"],["U.S. President","미국 대통령"]],
-  [["prove","드러나"],["League of Nations","국제연맹"],["hope","희망"],["dash","물거품으로 만들"]],
-  [["stop","저지"],["Japanese","일본의"],["helpless","아무런 도움도 되지 않는"],["German","독일의"]],
-  [["foreign policy","외교 정책"],["Interwar Period","제1차 세계대전과 제2차 세계대전 사이의 기간"],["blame","비판"],["ought to be","~되어야 하"]],
-  [["political power","정치적 권력"],["ideology","이데올로기"],["different","다양한"],["morality","도덕성"]],
-  [["democracy","민주 국가"],["decade","수십 년"],["similar","유사한"],["national power","국가의 힘"]]
+  [["writer","작가"],["weak","약자"],["Greek city-state","그리스 도시 국가"],["strong","강자"]],
+  [["develop","발달"],["liberal idealism","자유주의적 이상주의"],["accept","받아들이"],["reaction","반작용"]],
+  [["basically","기본적으로"],["good","선한"],["human nature","인간의 본성"],["Idealist","이상주의자"]],
+  [["active","활발한"],["World War","세계대전"],["international relationship","국제관계"],["basis","기초"]],
+  [["Woodrow Wilson","우드로 윌슨"],["experience","경험"],["U.S. President","미국 대통령"],["painful","고통스러운"]],
+  [["hope","희망"],["prove","드러나"],["League of Nations","국제연맹"],["dash","물거품으로 만들"]],
+  [["helpless","아무런 도움도 되지 않는"],["German","독일의"],["Japanese","일본의"],["stop","저지"]],
+  [["Interwar Period","제1차 세계대전과 제2차 세계대전 사이의 기간"],["blame","비판"],["ought to be","~되어야 하"],["foreign policy","외교 정책"]],
+  [["ideology","이데올로기"],["political power","정치적 권력"],["different","다양한"],["morality","도덕성"]],
+  [["similar","유사한"],["decade","수십 년"],["national power","국가의 힘"],["democracy","민주 국가"]]
 ];
 
 let currentRound = 0;
@@ -167,11 +174,8 @@ function loadRound(idx) {
   document.getElementById('check-btn').disabled = true;
 
   const pairs = ROUNDS[idx];
-  // English words fixed on left, Korean shuffled on right as drop zones
   const engWords = pairs.map(p => p[0]);
-  const korWords = pairs.map(p => p[1]);
-  // Shuffle Korean
-  const shuffledKor = [...korWords];
+  const shuffledKor = [...pairs.map(p => p[1])];
   for (let i = shuffledKor.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [shuffledKor[i], shuffledKor[j]] = [shuffledKor[j], shuffledKor[i]];
@@ -182,7 +186,6 @@ function loadRound(idx) {
   engCol.innerHTML = '';
   korCol.innerHTML = '';
 
-  // English: draggable cards on the LEFT
   engWords.forEach((word) => {
     const card = document.createElement('div');
     card.className = 'word-card';
@@ -194,7 +197,6 @@ function loadRound(idx) {
     engCol.appendChild(card);
   });
 
-  // Korean: drop zones on the RIGHT (shuffled)
   shuffledKor.forEach((word) => {
     const dz = document.createElement('div');
     dz.className = 'drop-zone';
@@ -227,16 +229,13 @@ function onDrop(e) {
   const engWord = dragSrc.dataset.eng;
   const korWord = dz.dataset.kor;
 
-  // If this drop zone already has an assignment, return that eng card to bank
   if (filledDrops[korWord]) {
     returnToBank(filledDrops[korWord]);
   }
 
-  // If dragSrc was already assigned to another drop zone, clear that
   const prevKor = dragSrc.dataset.currentDz;
   if (prevKor && prevKor !== korWord) {
     delete filledDrops[prevKor];
-    // Reset that drop zone appearance
     document.querySelectorAll('.drop-zone').forEach(z => {
       if (z.dataset.kor === prevKor) {
         z.classList.remove('filled');
@@ -245,11 +244,9 @@ function onDrop(e) {
     });
   }
 
-  // Place assignment
   filledDrops[korWord] = engWord;
   dragSrc.dataset.currentDz = korWord;
-  dragSrc.style.display = 'none'; // hide from bank
-
+  dragSrc.style.display = 'none';
   dz.classList.add('filled');
   dz.textContent = korWord + ' ← ' + engWord;
 
@@ -258,8 +255,7 @@ function onDrop(e) {
 }
 
 function returnToBank(engWord) {
-  const engCol = document.getElementById('eng-col');
-  engCol.querySelectorAll('.word-card').forEach(card => {
+  document.getElementById('eng-col').querySelectorAll('.word-card').forEach(card => {
     if (card.dataset.eng === engWord) {
       card.style.display = 'flex';
       card.dataset.currentDz = '';
@@ -276,7 +272,7 @@ function checkAllFilled() {
 function checkAnswers() {
   const pairs = ROUNDS[currentRound];
   const correctMap = {};
-  pairs.forEach(p => correctMap[p[1]] = p[0]); // kor -> eng
+  pairs.forEach(p => correctMap[p[1]] = p[0]);
 
   let allCorrect = true;
   document.querySelectorAll('.drop-zone').forEach(dz => {
@@ -284,7 +280,6 @@ function checkAnswers() {
     const eng = filledDrops[kor];
     if (eng === correctMap[kor]) {
       dz.classList.add('correct');
-      // Also mark the eng card
       document.querySelectorAll('.word-card').forEach(card => {
         if (card.dataset.eng === eng) card.classList.add('correct');
       });
@@ -295,19 +290,28 @@ function checkAnswers() {
   });
 
   if (allCorrect) {
-    setTimeout(() => {
-      if (currentRound + 1 >= ROUNDS.length) {
-        sendResult('Complete');
-        document.getElementById('complete-overlay').classList.add('show');
-      } else {
-        loadRound(currentRound + 1);
-      }
-    }, 600);
+    if (currentRound + 1 >= ROUNDS.length) {
+      sendResult('Complete');
+      setTimeout(() => {
+        window.location.href = 'ir-ep1-game8.html';
+      }, 800);
+    } else {
+      setTimeout(() => {
+        const msg = document.getElementById('round-complete-msg');
+        msg.textContent = `Round ${currentRound+1} done! On to round ${currentRound+2}.`;
+        document.getElementById('round-complete-overlay').classList.add('show');
+      }, 600);
+    }
   } else {
     setTimeout(() => {
       document.getElementById('penalty-overlay').classList.add('show');
     }, 600);
   }
+}
+
+function nextRound() {
+  document.getElementById('round-complete-overlay').classList.remove('show');
+  loadRound(currentRound + 1);
 }
 
 function dismissPenalty() {

@@ -44,7 +44,7 @@
 <div class="header">
   <h1>International Relations</h1>
   <h2>Episode 1 | September 1 – September 30</h2>
-  <h3>Game 8</h3>
+  <h3>Game 8 of 15</h3>
 </div>
 
 <div id="closed-before" class="closed-msg" style="display:none">
@@ -77,11 +77,18 @@
     </div>
   </div>
 
+  <div class="overlay" id="round-complete-overlay">
+    <div class="modal">
+      <h2>✅ Round Complete!</h2>
+      <p id="round-complete-msg"></p>
+      <button class="btn" onclick="nextRound()">Continue</button>
+    </div>
+  </div>
+
   <div class="overlay" id="complete-overlay">
     <div class="modal">
-      <h2>🎉 Game Complete!</h2>
-      <p>You finished all 10 rounds!</p>
-      <button class="btn" onclick="location.reload()">Play Again</button>
+      <h2>🎉 Episode 1 Complete!</h2>
+      <p>You have completed all games in Episode 1. Well done!</p>
     </div>
   </div>
 
@@ -101,19 +108,19 @@
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbzwHluspMZWtyTlhjcxcGIRlizvS6F49CEH1DD-WUtaHZnaUuXww88Kl5F06n-i076Zlw/exec";
 const EPISODE = 1;
 const GAME_NUMBER = 8;
-const OPEN_DATE = new Date("2026-09-01");
+const OPEN_DATE = new Date("2026-08-23");
 const CLOSE_DATE = new Date("2026-09-30T23:59:59");
 const ROUNDS = [
-  [["realist perspective","현실주의 시각"],["tenet","원리"],["assumption","가정"],["allied","동맹 관계인"]],
-  [["proposition","명제"],["state","국가"],["summarize","정리"],["unitary","단일의"]],
-  [["downgrade","중요성을 낮추"],["state-centric","국가 중심의"],["state-centric assumption","국가 중심 가정"],["rational unitary actor","합리적인 단일 행위자"]],
-  [["non-state actor","비국가 행위자"],["interest group","이익 단체"],["subnational","비국가적"],["MNC","다국적 기업"]],
-  [["national interest","국익"],["group","단체"],["unitary rational-actor assumption","단일의 합리적 행위자 가정"],["overestimate","과대평가"]],
-  [["liberal","진보적인"],["political party","정당"],["regardless of","~에 상관없이"],["President","대통령"]],
-  [["same way","같은 방식"],["central government","중앙정부"],["lack","부족"],["conservative","보수적인"]],
-  [["central authority","중앙 권한"],["international system","국제 체제"],["anarchy assumption","무정부 가정"],["motive","동기"]],
-  [["look after","돌보"],["own interest","자신의 이익"],["authority","권위"],["self-help system","자조 체계"]],
-  [["national sovereignty","국가 주권"],["separate","분리된"],["right","권리"],["preserve","지키"]]
+  [["realist perspective","현실주의 시각"],["assumption","가정"],["tenet","원리"],["allied","동맹 관계인"]],
+  [["summarize","정리"],["unitary","단일의"],["state","국가"],["proposition","명제"]],
+  [["downgrade","중요성을 낮추"],["state-centric assumption","국가 중심 가정"],["state-centric","국가 중심의"],["rational unitary actor","합리적인 단일 행위자"]],
+  [["interest group","이익 단체"],["subnational","비국가적"],["non-state actor","비국가 행위자"],["MNC","다국적 기업"]],
+  [["unitary rational-actor assumption","단일의 합리적 행위자 가정"],["group","단체"],["overestimate","과대평가"],["national interest","국익"]],
+  [["liberal","진보적인"],["regardless of","~에 상관없이"],["President","대통령"],["political party","정당"]],
+  [["same way","같은 방식"],["lack","부족"],["central government","중앙정부"],["conservative","보수적인"]],
+  [["international system","국제 체제"],["motive","동기"],["anarchy assumption","무정부 가정"],["central authority","중앙 권한"]],
+  [["look after","돌보"],["self-help system","자조 체계"],["authority","권위"],["own interest","자신의 이익"]],
+  [["preserve","지키"],["right","권리"],["separate","분리된"],["national sovereignty","국가 주권"]]
 ];
 
 let currentRound = 0;
@@ -167,11 +174,8 @@ function loadRound(idx) {
   document.getElementById('check-btn').disabled = true;
 
   const pairs = ROUNDS[idx];
-  // English words fixed on left, Korean shuffled on right as drop zones
   const engWords = pairs.map(p => p[0]);
-  const korWords = pairs.map(p => p[1]);
-  // Shuffle Korean
-  const shuffledKor = [...korWords];
+  const shuffledKor = [...pairs.map(p => p[1])];
   for (let i = shuffledKor.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [shuffledKor[i], shuffledKor[j]] = [shuffledKor[j], shuffledKor[i]];
@@ -182,7 +186,6 @@ function loadRound(idx) {
   engCol.innerHTML = '';
   korCol.innerHTML = '';
 
-  // English: draggable cards on the LEFT
   engWords.forEach((word) => {
     const card = document.createElement('div');
     card.className = 'word-card';
@@ -194,7 +197,6 @@ function loadRound(idx) {
     engCol.appendChild(card);
   });
 
-  // Korean: drop zones on the RIGHT (shuffled)
   shuffledKor.forEach((word) => {
     const dz = document.createElement('div');
     dz.className = 'drop-zone';
@@ -227,16 +229,13 @@ function onDrop(e) {
   const engWord = dragSrc.dataset.eng;
   const korWord = dz.dataset.kor;
 
-  // If this drop zone already has an assignment, return that eng card to bank
   if (filledDrops[korWord]) {
     returnToBank(filledDrops[korWord]);
   }
 
-  // If dragSrc was already assigned to another drop zone, clear that
   const prevKor = dragSrc.dataset.currentDz;
   if (prevKor && prevKor !== korWord) {
     delete filledDrops[prevKor];
-    // Reset that drop zone appearance
     document.querySelectorAll('.drop-zone').forEach(z => {
       if (z.dataset.kor === prevKor) {
         z.classList.remove('filled');
@@ -245,11 +244,9 @@ function onDrop(e) {
     });
   }
 
-  // Place assignment
   filledDrops[korWord] = engWord;
   dragSrc.dataset.currentDz = korWord;
-  dragSrc.style.display = 'none'; // hide from bank
-
+  dragSrc.style.display = 'none';
   dz.classList.add('filled');
   dz.textContent = korWord + ' ← ' + engWord;
 
@@ -258,8 +255,7 @@ function onDrop(e) {
 }
 
 function returnToBank(engWord) {
-  const engCol = document.getElementById('eng-col');
-  engCol.querySelectorAll('.word-card').forEach(card => {
+  document.getElementById('eng-col').querySelectorAll('.word-card').forEach(card => {
     if (card.dataset.eng === engWord) {
       card.style.display = 'flex';
       card.dataset.currentDz = '';
@@ -276,7 +272,7 @@ function checkAllFilled() {
 function checkAnswers() {
   const pairs = ROUNDS[currentRound];
   const correctMap = {};
-  pairs.forEach(p => correctMap[p[1]] = p[0]); // kor -> eng
+  pairs.forEach(p => correctMap[p[1]] = p[0]);
 
   let allCorrect = true;
   document.querySelectorAll('.drop-zone').forEach(dz => {
@@ -284,7 +280,6 @@ function checkAnswers() {
     const eng = filledDrops[kor];
     if (eng === correctMap[kor]) {
       dz.classList.add('correct');
-      // Also mark the eng card
       document.querySelectorAll('.word-card').forEach(card => {
         if (card.dataset.eng === eng) card.classList.add('correct');
       });
@@ -295,19 +290,28 @@ function checkAnswers() {
   });
 
   if (allCorrect) {
-    setTimeout(() => {
-      if (currentRound + 1 >= ROUNDS.length) {
-        sendResult('Complete');
-        document.getElementById('complete-overlay').classList.add('show');
-      } else {
-        loadRound(currentRound + 1);
-      }
-    }, 600);
+    if (currentRound + 1 >= ROUNDS.length) {
+      sendResult('Complete');
+      setTimeout(() => {
+        window.location.href = 'ir-ep1-game9.html';
+      }, 800);
+    } else {
+      setTimeout(() => {
+        const msg = document.getElementById('round-complete-msg');
+        msg.textContent = `Round ${currentRound+1} done! On to round ${currentRound+2}.`;
+        document.getElementById('round-complete-overlay').classList.add('show');
+      }, 600);
+    }
   } else {
     setTimeout(() => {
       document.getElementById('penalty-overlay').classList.add('show');
     }, 600);
   }
+}
+
+function nextRound() {
+  document.getElementById('round-complete-overlay').classList.remove('show');
+  loadRound(currentRound + 1);
 }
 
 function dismissPenalty() {
